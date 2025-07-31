@@ -13,6 +13,12 @@ enum ProjectStatus {
   ARCHIVED
 }
 
+enum ProjectType {
+  PERSONAL
+  FREELANCE
+  DEVOPS
+}
+
 model Project {
   id          Int           @id @default(autoincrement())
   title       String
@@ -26,6 +32,7 @@ model Project {
   publishedAt DateTime?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  type        ProjectType
 
   // Relationships
   overview            ProjectOverview?
@@ -104,12 +111,15 @@ model Screenshot {
 model Technology {
   id        Int      @id @default(autoincrement())
   name      String
-  reason    String   @db.Text
+  reason    String?  @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  projectId Int
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assessment   Assessment? @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  
+  assessmentId Int?
+  projectId Int?
 
   @@map("technologies")
 }
@@ -121,11 +131,11 @@ model Tag {
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
-  projectTags ProjectTag[]
+  projectTags    ProjectTag[]
+  assessmentTags AssessmentTag[]  
 
   @@map("tags")
 }
-
 model ProjectTag {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
@@ -268,10 +278,10 @@ model BlogPost {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  // JSON fields for simple data
-  author          Json     // Author info since it's just you
+
+  author          Json     
   
-  // Relationships
+
   category        Category?     @relation(fields: [categoryId], references: [id])
   categoryId      Int?
   series          Series?       @relation(fields: [seriesId], references: [id])
@@ -312,14 +322,13 @@ model Series {
 model ContentBlock {
   id        Int              @id @default(autoincrement())
   type      ContentBlockType
-  order     Float            // Using Float for easy reordering
+  order     Float            
   content   String           @db.Text
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
 
-  // Optional fields based on block type
-  // For headings
-  level     Int?             // h1, h2, h3, etc.
+  
+  level     Int?             
   
   // For code blocks
   language  String?
@@ -329,7 +338,7 @@ model ContentBlock {
   imageUrl  String?
   imageAlt  String?
   imageCaption String?
-  imageAlignment String?      // center, left, right, full
+  imageAlignment String?      
   
   // For callouts
   calloutVariant CalloutVariant?
@@ -391,4 +400,90 @@ model ContactSubmission {
   createdAt DateTime @default(now())
   
   @@map("contact_submissions")
+}
+
+
+model Assessment {
+  id          Int            @id @default(autoincrement())
+  title       String
+  description String         @db.Text
+  slug        String         @unique
+  mainImage   String?
+  publishedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  contentBlocks     AssessmentContentBlock[]
+  images           AssessmentImage[]
+  files            AssessmentFile[]
+  assessmentTags   AssessmentTag[]
+  technologies     Technology[]
+
+  @@map("assessments")
+}
+
+enum AssessmentContentType {
+  PARAGRAPH
+  HEADING
+}
+
+model AssessmentContentBlock {
+  id          Int                   @id @default(autoincrement())
+  type        AssessmentContentType @default(PARAGRAPH)
+  content     String                @db.Text
+  order       Int                   @default(0)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  // Para headings
+  level       Int?
+
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  assessmentId Int
+
+  @@map("assessment_content_blocks")
+}
+
+model AssessmentImage {
+  id          Int      @id @default(autoincrement())
+  url         String
+  alt         String?
+  caption     String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  assessmentId Int
+
+  @@map("assessment_images")
+}
+
+model AssessmentFile {
+  id          Int      @id @default(autoincrement())
+  name        String
+  url         String
+  size        Int?
+  mimeType    String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  assessmentId Int
+
+  @@map("assessment_files")
+}
+
+model AssessmentTag {
+  id           Int      @id @default(autoincrement())
+  createdAt    DateTime @default(now())
+
+  assessment   Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  assessmentId Int
+  tag          Tag       @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId        Int
+
+  @@unique([assessmentId, tagId])
+  @@map("assessment_tags")
 }

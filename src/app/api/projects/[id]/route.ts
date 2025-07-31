@@ -3,21 +3,24 @@ import { getProjectById, updateProject, deleteProject } from '@/lib/controllers/
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  return getProjectById(params.id);
+  const { id } = context.params;
+  return getProjectById(id);
 }
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  return updateProject(params.id, request);
+  const { id } = context.params;
+  return updateProject(id, request);
 }
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  return deleteProject(params.id);
+  const { id } = context.params;
+  return deleteProject(id);
 }

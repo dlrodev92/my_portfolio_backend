@@ -1,25 +1,36 @@
+import ProjectEditForm from "@/components/dashboard/projects/projectEditForm";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+
 interface ProjectDetailPageProps {
-    params: {
-      slug: string;
-    };
-  }
+  params: {
+    slug: string;
+  };
+}
+
+export default async function ProjectDetailPage({ params }: ProjectDetailPageProps) {
+
+  const {slug} = await params
   
-  export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
-    return (
-      <div className="space-y-6">
+  return (
+    <div className="max-w-4xl mx-auto py-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" size="icon" asChild>
+          <Link href="/dashboard/projects">
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+        </Button>
         <div>
           <h1 className="text-3xl font-title font-bold">Edit Project</h1>
           <p className="text-muted-foreground">
-            Editing project: {params.slug}
-          </p>
-        </div>
-        
-        <div className="rounded-lg border bg-card p-8 text-center">
-          <h2 className="text-xl font-semibold mb-2">Project Editor</h2>
-          <p className="text-muted-foreground">
-            This is where you'll edit the project: <strong>{params.slug}</strong>
+            Modify project details and content
           </p>
         </div>
       </div>
-    );
-  }
+
+      <ProjectEditForm slug={slug} />
+    </div>
+  );
+}

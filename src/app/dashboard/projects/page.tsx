@@ -1,16 +1,27 @@
 import { prisma } from '@/lib/prisma/client';
 import ProjectsHeader from '@/components/dashboard/projects/projectsHeader';
-import ProjectsTable from '@/components/dashboard/projects/projectsTable';
-import ProjectsSearch from '@/components/dashboard/projects/projectSearch';
+import ProjectsContainer from '@/components/dashboard/projects/projectsContainer';
 
-async function getProjects() {
+async function getProjectsData() {
   try {
     const projects = await prisma.project.findMany({
       include: {
-        technologies: true,
+        technologies: {
+          select: {
+            id: true,
+            name: true,
+            reason: true,
+          }
+        },
         projectTags: {
           include: {
-            tag: true
+            tag: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+              }
+            }
           }
         },
       },
@@ -19,50 +30,70 @@ async function getProjects() {
       }
     });
 
-    return projects;
-  } catch (error) {
-    console.error('Error fetching projects:', error);
-    return [];
-  }
-}
+    const stats = {
+      total: projects.length,
+      live: projects.filter(p => p.status === 'LIVE').length,
+      draft: projects.filter(p => p.status === 'IN_PROGRESS').length,
+      archived: projects.filter(p => p.status === 'ARCHIVED').length,
+      personal: projects.filter(p => p.type === 'PERSONAL').length,
+      freelance: projects.filter(p => p.type === 'FREELANCE').length,
+      devops: projects.filter(p => p.type === 'DEVOPS').length,
+    };
 
-async function getProjectsStats() {
-  try {
-    const totalProjects = await prisma.project.count();
-    const liveProjects = await prisma.project.count({
-      where: { status: 'LIVE' }
-    });
-    const draftProjects = await prisma.project.count({
-      where: { status: 'IN_PROGRESS' }
-    });
+    const techsSet = new Set<string>();
+    const availableTechnologies = projects
+      .flatMap(project => project.technologies)
+      .filter(tech => {
+        if (techsSet.has(tech.name)) {
+          return false;
+        }
+        techsSet.add(tech.name);
+        return true;
+      })
+      .map(tech => ({ id: tech.id, name: tech.name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    const availableTypes = Array.from(
+      new Set(projects.map(p => p.type))
+    ).sort() as ('PERSONAL' | 'FREELANCE' | 'DEVOPS')[];
 
     return {
-      total: totalProjects,
-      live: liveProjects,
-      draft: draftProjects,
+      projects,
+      stats,
+      availableTechnologies,
+      availableTypes
     };
   } catch (error) {
-    console.error('Error fetching project stats:', error);
+    console.error('Error fetching projects data:', error);
     return {
-      total: 0,
-      live: 0,
-      draft: 0,
+      projects: [],
+      stats: {
+        total: 0,
+        live: 0,
+        draft: 0,
+        archived: 0,
+        personal: 0,
+        freelance: 0,
+        devops: 0,
+      },
+      availableTechnologies: [],
+      availableTypes: [] as ('PERSONAL' | 'FREELANCE' | 'DEVOPS')[]
     };
   }
 }
 
 export default async function ProjectsPage() {
-  const projects = await getProjects();
-  const stats = await getProjectsStats();
+  const { projects, stats, availableTechnologies, availableTypes } = await getProjectsData();
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6 w-full">
       <ProjectsHeader stats={stats} />
       
-      <div className="space-y-4">
-        <ProjectsSearch />
-        <ProjectsTable projects={projects} />
-      </div>
+      <ProjectsContainer 
+        projects={projects} 
+        availableTechnologies={availableTechnologies}
+        availableTypes={availableTypes}
+      />
     </div>
   );
 }

@@ -104,8 +104,13 @@ export const createProjectArrayData = async (tx: any, projectId: number, data: a
   // Create technologies
   if (technologies && Array.isArray(technologies)) {
     for (const tech of technologies) {
+      // Handle both string format and object format
+      const techData = typeof tech === 'string' 
+        ? { name: tech, reason: '' }
+        : { name: tech.name || tech, reason: tech.reason || '' };
+        
       await tx.technology.create({
-        data: { projectId, name: tech.name, reason: tech.reason },
+        data: { projectId, name: techData.name, reason: techData.reason },
       });
     }
   }
@@ -113,54 +118,84 @@ export const createProjectArrayData = async (tx: any, projectId: number, data: a
   // Create lessons
   if (lessons && Array.isArray(lessons)) {
     for (const lesson of lessons) {
-      await tx.lesson.create({
-        data: { projectId, description: lesson.description },
-      });
+      // Handle both string format and object format
+      const description = typeof lesson === 'string' ? lesson : lesson.description;
+      
+      if (description) {
+        await tx.lesson.create({
+          data: { projectId, description },
+        });
+      }
     }
   }
 
   // Create business outcomes
   if (businessOutcomes && Array.isArray(businessOutcomes)) {
     for (const outcome of businessOutcomes) {
-      await tx.businessOutcome.create({
-        data: { projectId, description: outcome.description },
-      });
+      // Handle both string format and object format
+      const description = typeof outcome === 'string' ? outcome : outcome.description;
+      
+      if (description) {
+        await tx.businessOutcome.create({
+          data: { projectId, description },
+        });
+      }
     }
   }
 
   // Create improvements
   if (improvements && Array.isArray(improvements)) {
     for (const improvement of improvements) {
-      await tx.improvement.create({
-        data: { projectId, description: improvement.description },
-      });
+      // Handle both string format and object format
+      const description = typeof improvement === 'string' ? improvement : improvement.description;
+      
+      if (description) {
+        await tx.improvement.create({
+          data: { projectId, description },
+        });
+      }
     }
   }
 
   // Create next steps
   if (nextSteps && Array.isArray(nextSteps)) {
     for (const step of nextSteps) {
-      await tx.nextStep.create({
-        data: { projectId, description: step.description },
-      });
+      // Handle both string format and object format
+      const description = typeof step === 'string' ? step : step.description;
+      
+      if (description) {
+        await tx.nextStep.create({
+          data: { projectId, description },
+        });
+      }
     }
   }
 
   // Create future tools
   if (futureTools && Array.isArray(futureTools)) {
     for (const tool of futureTools) {
-      await tx.futureTool.create({
-        data: { projectId, name: tool.name },
-      });
+      // Handle both string format and object format
+      const name = typeof tool === 'string' ? tool : tool.name;
+      
+      if (name) {
+        await tx.futureTool.create({
+          data: { projectId, name },
+        });
+      }
     }
   }
 
   // Create performance metrics
   if (performanceMetrics && Array.isArray(performanceMetrics)) {
     for (const metric of performanceMetrics) {
-      await tx.performanceMetric.create({
-        data: { projectId, description: metric.description },
-      });
+      // Handle both string format and object format
+      const description = typeof metric === 'string' ? metric : metric.description;
+      
+      if (description) {
+        await tx.performanceMetric.create({
+          data: { projectId, description },
+        });
+      }
     }
   }
 };
@@ -183,20 +218,25 @@ export const createProjectScreenshots = async (tx: any, projectId: number, scree
 export const createProjectTags = async (tx: any, projectId: number, tags: any[]) => {
   if (tags && Array.isArray(tags)) {
     for (const tagData of tags) {
-      // Create or find existing tag
-      const tag = await tx.tag.upsert({
-        where: { name: tagData.name },
-        update: {},
-        create: {
-          name: tagData.name,
-          slug: tagData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-        },
-      });
+      // Handle both string format and object format
+      const tagName = typeof tagData === 'string' ? tagData : tagData.name;
+      
+      if (tagName) {
+        // Create or find existing tag
+        const tag = await tx.tag.upsert({
+          where: { name: tagName },
+          update: {},
+          create: {
+            name: tagName,
+            slug: tagName.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+          },
+        });
 
-      // Connect tag to project
-      await tx.projectTag.create({
-        data: { projectId, tagId: tag.id },
-      });
+        // Connect tag to project
+        await tx.projectTag.create({
+          data: { projectId, tagId: tag.id },
+        });
+      }
     }
   }
 };

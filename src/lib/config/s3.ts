@@ -18,16 +18,42 @@ export const S3_FOLDERS = {
   projects: 'portfolio/projects',
   blog: 'portfolio/blog',
   general: 'portfolio/general',
+  assessments: 'portfolio/assessments',
 };
 
 export const UPLOAD_CONFIG = {
-  maxFileSize: 10 * 1024 * 1024,
+  maxFileSize: 10 * 1024 * 1024, // 10MB
   allowedMimeTypes: [
+    
     'image/jpeg',
     'image/jpg', 
     'image/png',
     'image/webp',
-    'image/gif'
+    'image/gif',
+    
+   
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    
+    
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    
+    
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    
+    'text/plain',
+    'text/csv',
+    'application/zip',
+    'application/x-zip-compressed',
   ],
-  allowedExtensions: ['.jpg', '.jpeg', '.png', '.webp', '.gif'],
+  allowedExtensions: [
+    '.jpg', '.jpeg', '.png', '.webp', '.gif',
+    '.pdf', '.doc', '.docx',
+    '.ppt', '.pptx',
+    '.xls', '.xlsx',
+    '.txt', '.csv', '.zip',
+  ],
 };

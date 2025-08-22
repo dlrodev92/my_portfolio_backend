@@ -200,7 +200,8 @@ export const createBlogPost = async (req: NextRequest): Promise<NextResponse> =>
           heroImageAlt: blogData.heroImageAlt,
           heroImageCaption: blogData.heroImageCaption,
           publishedAt: blogData.publishedAt ? new Date(blogData.publishedAt) : null,
-          author: blogData.author as Prisma.InputJsonValue,
+          //eslint-disable-next-line @typescript-eslint/no-explicit-any
+          author: blogData.author as any,
           categoryId: finalCategoryId && finalCategoryId !== 'none' ? parseInt(finalCategoryId) : null,
           seriesId: finalSeriesId && finalSeriesId !== 'none' ? parseInt(finalSeriesId) : null,
           seriesPart: blogData.seriesPart,

@@ -15,8 +15,8 @@ async function getBlogData() {
       })
     ]);
 
-    // Map after the Promise.all to avoid typing issues
-    const series = seriesRaw.map(s => ({
+   //eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const series = seriesRaw.map((s: any) => ({
       ...s,
       description: s.description ?? undefined
     }));

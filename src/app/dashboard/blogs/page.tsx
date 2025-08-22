@@ -24,14 +24,15 @@ async function getBlogsData() {
     });
 
     // Fix author type to match BlogPostWithRelations
-    const blogs: BlogPostWithRelations[] = rawBlogs.map(blog => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const blogs: BlogPostWithRelations[] = rawBlogs.map((blog: any) => ({
       ...blog,
       author: typeof blog.author === 'string'
         ? JSON.parse(blog.author)
-        : blog.author
+        : blog.author,
     }));
 
-    // Estadísticas calculadas desde los datos
+    // Rest of your code stays the same...
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     

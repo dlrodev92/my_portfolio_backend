@@ -397,7 +397,7 @@ export default function BasicInfoStep({ form, categories, series }: BasicInfoSte
               <div className="relative">
                 <div className="relative w-full h-48 rounded-lg overflow-hidden bg-muted">
                   <Image
-                    src={URL.createObjectURL(heroImage)}
+                    src={typeof heroImage === "object" ? URL.createObjectURL(heroImage) : heroImage}
                     alt="Hero preview"
                     fill
                     className="object-cover"

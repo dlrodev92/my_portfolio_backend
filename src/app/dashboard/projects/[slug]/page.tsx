@@ -4,9 +4,9 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
 interface ProjectDetailPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function ProjectDetailPage({ params }: ProjectDetailPageProps) {

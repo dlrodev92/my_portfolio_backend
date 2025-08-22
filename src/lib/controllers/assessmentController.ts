@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma/client';
-import { Prisma, PrismaClientKnownRequestError } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { FileUpload } from '@/lib/utils/s3Upload';
 import {
   handleAssessmentFileUploads,
@@ -39,6 +39,7 @@ interface AssessmentFileUploadResult {
     mimeType: string;
   }>;
 }
+
 export const getAssessments = async (request: NextRequest): Promise<NextResponse> => {
   try {
     const { searchParams } = new URL(request.url);
@@ -46,7 +47,7 @@ export const getAssessments = async (request: NextRequest): Promise<NextResponse
     const tags = searchParams.get('tags')?.split(',').filter(Boolean) || [];
     const techs = searchParams.get('techs')?.split(',').filter(Boolean) || [];
 
-    //eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const where: any = {
       AND: [
         search ? {
@@ -175,7 +176,7 @@ export const createAssessment = async (req: NextRequest): Promise<NextResponse> 
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
 
-   // Handle file uploads
+    // Handle file uploads
     const uploadedFiles: AssessmentFileUploadResult = await handleAssessmentFileUploads(uploadFiles, fileNames);
 
     // Start transaction
@@ -224,12 +225,8 @@ export const createAssessment = async (req: NextRequest): Promise<NextResponse> 
   } catch (error) {
     console.error('Create assessment error:', error);
     
-    if (
-      error &&
-      typeof error === 'object' &&
-      'code' in error &&
-      (error as PrismaClientKnownRequestError).code === 'P2002'
-    ) {
+    // Check for unique constraint violation
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
       return NextResponse.json(
         { error: 'An assessment with this title already exists' },
         { status: 409 }
@@ -439,12 +436,8 @@ export const updateAssessmentBySlug = async (req: NextRequest, slug: string): Pr
   } catch (error) {
     console.error('Update assessment error:', error);
     
-    if (
-      error &&
-      typeof error === 'object' &&
-      'code' in error &&
-      (error as PrismaClientKnownRequestError).code === 'P2002'
-    ) {
+    // Check for unique constraint violation
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
       return NextResponse.json(
         { error: 'An assessment with this title already exists' },
         { status: 409 }

@@ -215,12 +215,14 @@ export default function SEOStep({ form }: SEOStepProps) {
             <div className="space-y-4">
               <div className="relative">
                 <div className="relative w-full h-48 rounded-lg overflow-hidden bg-muted">
+               <div className="relative w-full h-48 rounded-lg overflow-hidden bg-muted">
                   <Image
-                    src={URL.createObjectURL(socialImage)}
+                    src={socialImage instanceof File ? URL.createObjectURL(socialImage) : socialImage}
                     alt="Social media preview"
                     fill
                     className="object-cover"
                   />
+                </div>
                 </div>
                 <Button
                   type="button"

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { prisma } from '@/lib/prisma/client';
+import { Series } from '@prisma/client';
 
 async function getBlogData() {
   try {
@@ -12,7 +13,7 @@ async function getBlogData() {
       }),
       prisma.series.findMany({
         orderBy: { name: 'asc' }
-      }).then(series => series.map(s => ({
+      }).then((series: Series[]) => series.map(s => ({
         ...s,
         description: s.description ?? undefined
       })))

@@ -31,9 +31,11 @@ async function getProjectsData() {
       }
     });
 
-    const projects: ProjectWithRelations[] = rawProjects.map(project => ({
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const projects: ProjectWithRelations[] = rawProjects.map((project: any) => ({
       ...project,
-      technologies: project.technologies.map(tech => ({
+      //eslint-disable-next-line @typescript-eslint/no-explicit-any
+      technologies: project.technologies.map((tech: any) => ({
         ...tech,
         reason: tech.reason ?? '',
       })),

@@ -141,6 +141,7 @@ export const getProjects = async (req: NextRequest): Promise<NextResponse> => {
     const search = searchParams.get('search');
     const technology = searchParams.get('technology');
     
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
     const whereClause: any = {};
     
     if (status) {
@@ -729,6 +730,7 @@ export const getProjectsForCards = async (req: NextRequest): Promise<NextRespons
     const limit = searchParams.get('limit');
     const featured = searchParams.get('featured'); // For featured projects only
     
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
     const whereClause: any = {};
     
     // Default to only LIVE projects for cards unless specified

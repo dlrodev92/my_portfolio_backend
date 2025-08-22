@@ -1,4 +1,4 @@
-import type { BlogPost, Category, Series, ContentBlock, BlogTag, BlogPostTag } from '@prisma/client';
+import type {  Category, Series, ContentBlock, BlogTag, BlogPostTag } from '@prisma/client';
 
 // Interfaz para filtros de búsqueda de blogs
 export interface BlogSearchFilters {

@@ -1,4 +1,4 @@
-import type { Assessment, AssessmentContentBlock, AssessmentImage, AssessmentFile, AssessmentTag, Tag, Technology } from '@prisma/client';
+import type { AssessmentContentBlock, AssessmentImage, AssessmentFile, AssessmentTag, Tag, Technology } from '@prisma/client';
 
 export interface AssessmentWithRelations {
   id: number;

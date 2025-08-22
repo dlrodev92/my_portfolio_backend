@@ -1,18 +1,68 @@
-import { prisma } from '@/lib/prisma/client';
-import { uploadFileToS3, uploadMultipleFilesToS3 } from './s3Upload';
+import { uploadFileToS3, uploadMultipleFilesToS3, FileUpload } from './s3Upload';
+import { Prisma } from '@prisma/client';
 
-export const handleProjectFileUploads = async (files: any, screenshots: any[]) => {
+// Types for the helper functions
+export interface UploadedFiles {
+  heroImage?: FileUpload[];
+  screenshots?: FileUpload[];
+}
+
+export interface ScreenshotData {
+  description?: string;
+  order?: number;
+}
+
+export interface ProjectOverviewData {
+  problem?: string;
+  solution?: string;
+  role?: string;
+  impact?: string;
+}
+
+export interface ProjectMetricsData {
+  launchDate?: string;
+  duration?: string;
+  teamSize?: string;
+}
+
+export interface TechnicalDetailsData {
+  database?: string;
+  api?: string;
+  components?: string;
+}
+
+export interface ProjectArrayData {
+  technologies?: (string | { name: string; reason?: string })[];
+  lessons?: (string | { description: string })[];
+  businessOutcomes?: (string | { description: string })[];
+  improvements?: (string | { description: string })[];
+  nextSteps?: (string | { description: string })[];
+  futureTools?: (string | { name: string })[];
+  performanceMetrics?: (string | { description: string })[];
+}
+
+export interface ScreenshotUploadResult {
+  url: string;
+  description: string;
+  order: number;
+  success: boolean;
+}
+
+export interface FileUploadResults {
+  heroImageUrl: string;
+  screenshotUrls: ScreenshotUploadResult[];
+}
+
+export const handleProjectFileUploads = async (
+  files: UploadedFiles, 
+  screenshots: ScreenshotData[]
+): Promise<FileUploadResults> => {
   let heroImageUrl = '';
-  let screenshotUrls: any[] = [];
+  let screenshotUrls: ScreenshotUploadResult[] = [];
 
   // Upload hero image
   if (files.heroImage && files.heroImage[0]) {
-    const heroResult = await uploadFileToS3({
-      buffer: files.heroImage[0].buffer,
-      originalname: files.heroImage[0].originalname,
-      mimetype: files.heroImage[0].mimetype,
-      size: files.heroImage[0].size,
-    }, 'projects');
+    const heroResult = await uploadFileToS3(files.heroImage[0], 'projects');
 
     if (!heroResult.success) {
       throw new Error(`Hero image upload failed: ${heroResult.error}`);
@@ -22,14 +72,7 @@ export const handleProjectFileUploads = async (files: any, screenshots: any[]) =
 
   // Upload multiple screenshots
   if (files.screenshots) {
-    const screenshotFiles = files.screenshots.map((file: any) => ({
-      buffer: file.buffer,
-      originalname: file.originalname,
-      mimetype: file.mimetype,
-      size: file.size,
-    }));
-
-    const screenshotResults = await uploadMultipleFilesToS3(screenshotFiles, 'projects');
+    const screenshotResults = await uploadMultipleFilesToS3(files.screenshots, 'projects');
     
     screenshotUrls = screenshotResults.map((result, index) => ({
       url: result.url || '',
@@ -47,10 +90,14 @@ export const handleProjectFileUploads = async (files: any, screenshots: any[]) =
   return { heroImageUrl, screenshotUrls };
 };
 
-export const createProjectOverview = async (tx: any, projectId: number, data: any) => {
+export const createProjectOverview = async (
+  tx: Prisma.TransactionClient, 
+  projectId: number, 
+  data: ProjectOverviewData
+): Promise<void> => {
   const { problem, solution, role, impact } = data;
   if (problem || solution || role || impact) {
-    return await tx.projectOverview.create({
+    await tx.projectOverview.create({
       data: {
         projectId,
         problem: problem || '',
@@ -62,10 +109,14 @@ export const createProjectOverview = async (tx: any, projectId: number, data: an
   }
 };
 
-export const createProjectMetrics = async (tx: any, projectId: number, data: any) => {
+export const createProjectMetrics = async (
+  tx: Prisma.TransactionClient, 
+  projectId: number, 
+  data: ProjectMetricsData
+): Promise<void> => {
   const { launchDate, duration, teamSize } = data;
   if (launchDate || duration || teamSize) {
-    return await tx.projectMetrics.create({
+    await tx.projectMetrics.create({
       data: {
         projectId,
         launchDate: launchDate || '',
@@ -76,10 +127,14 @@ export const createProjectMetrics = async (tx: any, projectId: number, data: any
   }
 };
 
-export const createTechnicalDetails = async (tx: any, projectId: number, data: any) => {
+export const createTechnicalDetails = async (
+  tx: Prisma.TransactionClient, 
+  projectId: number, 
+  data: TechnicalDetailsData
+): Promise<void> => {
   const { database, api, components } = data;
   if (database || api || components) {
-    return await tx.technicalDetails.create({
+    await tx.technicalDetails.create({
       data: {
         projectId,
         database: database || '',
@@ -90,7 +145,11 @@ export const createTechnicalDetails = async (tx: any, projectId: number, data: a
   }
 };
 
-export const createProjectArrayData = async (tx: any, projectId: number, data: any) => {
+export const createProjectArrayData = async (
+  tx: Prisma.TransactionClient, 
+  projectId: number, 
+  data: ProjectArrayData
+): Promise<void> => {
   const { 
     technologies, 
     lessons, 
@@ -104,10 +163,9 @@ export const createProjectArrayData = async (tx: any, projectId: number, data: a
   // Create technologies
   if (technologies && Array.isArray(technologies)) {
     for (const tech of technologies) {
-      // Handle both string format and object format
       const techData = typeof tech === 'string' 
         ? { name: tech, reason: '' }
-        : { name: tech.name || tech, reason: tech.reason || '' };
+        : { name: tech.name, reason: tech.reason || '' };
         
       await tx.technology.create({
         data: { projectId, name: techData.name, reason: techData.reason },
@@ -118,7 +176,6 @@ export const createProjectArrayData = async (tx: any, projectId: number, data: a
   // Create lessons
   if (lessons && Array.isArray(lessons)) {
     for (const lesson of lessons) {
-      // Handle both string format and object format
       const description = typeof lesson === 'string' ? lesson : lesson.description;
       
       if (description) {
@@ -132,7 +189,6 @@ export const createProjectArrayData = async (tx: any, projectId: number, data: a
   // Create business outcomes
   if (businessOutcomes && Array.isArray(businessOutcomes)) {
     for (const outcome of businessOutcomes) {
-      // Handle both string format and object format
       const description = typeof outcome === 'string' ? outcome : outcome.description;
       
       if (description) {
@@ -146,7 +202,6 @@ export const createProjectArrayData = async (tx: any, projectId: number, data: a
   // Create improvements
   if (improvements && Array.isArray(improvements)) {
     for (const improvement of improvements) {
-      // Handle both string format and object format
       const description = typeof improvement === 'string' ? improvement : improvement.description;
       
       if (description) {
@@ -160,7 +215,6 @@ export const createProjectArrayData = async (tx: any, projectId: number, data: a
   // Create next steps
   if (nextSteps && Array.isArray(nextSteps)) {
     for (const step of nextSteps) {
-      // Handle both string format and object format
       const description = typeof step === 'string' ? step : step.description;
       
       if (description) {
@@ -174,7 +228,6 @@ export const createProjectArrayData = async (tx: any, projectId: number, data: a
   // Create future tools
   if (futureTools && Array.isArray(futureTools)) {
     for (const tool of futureTools) {
-      // Handle both string format and object format
       const name = typeof tool === 'string' ? tool : tool.name;
       
       if (name) {
@@ -188,7 +241,6 @@ export const createProjectArrayData = async (tx: any, projectId: number, data: a
   // Create performance metrics
   if (performanceMetrics && Array.isArray(performanceMetrics)) {
     for (const metric of performanceMetrics) {
-      // Handle both string format and object format
       const description = typeof metric === 'string' ? metric : metric.description;
       
       if (description) {
@@ -200,7 +252,11 @@ export const createProjectArrayData = async (tx: any, projectId: number, data: a
   }
 };
 
-export const createProjectScreenshots = async (tx: any, projectId: number, screenshotUrls: any[]) => {
+export const createProjectScreenshots = async (
+  tx: Prisma.TransactionClient, 
+  projectId: number, 
+  screenshotUrls: ScreenshotUploadResult[]
+): Promise<void> => {
   if (screenshotUrls.length > 0) {
     for (const screenshot of screenshotUrls) {
       await tx.screenshot.create({
@@ -215,10 +271,13 @@ export const createProjectScreenshots = async (tx: any, projectId: number, scree
   }
 };
 
-export const createProjectTags = async (tx: any, projectId: number, tags: any[]) => {
+export const createProjectTags = async (
+  tx: Prisma.TransactionClient, 
+  projectId: number, 
+  tags: (string | { name: string })[]
+): Promise<void> => {
   if (tags && Array.isArray(tags)) {
     for (const tagData of tags) {
-      // Handle both string format and object format
       const tagName = typeof tagData === 'string' ? tagData : tagData.name;
       
       if (tagName) {

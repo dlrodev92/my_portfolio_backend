@@ -180,7 +180,7 @@ export default function TagsSection({ form }: TagsSectionProps) {
       </Card>
 
       <div className="text-xs text-muted-foreground">
-        <p><strong>Tip:</strong> Use specific tags like "React", "E-commerce", or "Real-time" to make your projects easier to find and filter.</p>
+        <p><strong>Tip:</strong> Use specific tags like &quot;React&quot;, &quot;E-commerce&quot;, or &quot;Real-time&quot; to make your projects easier to find and filter.</p>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Plus, FileText, Eye, Clock, Calendar, TrendingUp } from "lucide-react";
+import { Plus, FileText, Eye, Clock, Calendar } from "lucide-react";
 import Link from "next/link";
 import { BlogStats } from "@/lib/types/blogs";
 

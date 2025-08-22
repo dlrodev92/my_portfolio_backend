@@ -36,12 +36,17 @@ export default function ContentEditorStep({ form }: ContentEditorStepProps) {
   const contentBlocks = form.watch('contentBlocks') || [];
   const [selectedBlockType, setSelectedBlockType] = useState('PARAGRAPH');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [blockData, setBlockData] = useState<any>({ content: '' });
+  const [blockData, setBlockData] = useState<Partial<ContentBlockData>>({ content: '' });
 
-  // Calculate stats
+  
   const totalWords = contentBlocks.reduce((count, block) => {
     return count + (block.content.trim().split(/\s+/).length || 0);
   }, 0);
+
+
+const handleBlockChange = (newData: Partial<ContentBlockData>) => {
+  setBlockData(prev => ({ ...prev, ...newData }));
+};
 
   useEffect(() => {
     form.setValue('wordCount', totalWords);
@@ -54,7 +59,7 @@ export default function ContentEditorStep({ form }: ContentEditorStepProps) {
   };
 
   const addBlock = () => {
-    if (!blockData.content.trim()) return;
+    if (!blockData.content?.trim()) return;
 
     const newBlock = createContentBlock(
       selectedBlockType as ContentBlockData['type'],
@@ -68,7 +73,7 @@ export default function ContentEditorStep({ form }: ContentEditorStepProps) {
   };
 
   const updateBlock = (index: number) => {
-    if (!blockData.content.trim()) return;
+    if (!blockData.content?.trim()) return;
 
     const updated = [...contentBlocks];
     updated[index] = {
@@ -96,17 +101,18 @@ export default function ContentEditorStep({ form }: ContentEditorStepProps) {
   };
 
   const renderBlockEditor = () => {
-    const blockType = blockTypes.find(t => t.value === selectedBlockType);
-    if (!blockType) return null;
+  const blockType = blockTypes.find(t => t.value === selectedBlockType);
+  if (!blockType) return null;
 
-    const BlockComponent = blockType.component;
-    return (
-      <BlockComponent
-        {...blockData}
-        onChange={setBlockData}
-      />
-    );
-  };
+  const BlockComponent = blockType.component;
+  return (
+    <BlockComponent
+      {...blockData}
+      // @ts-expect-error - Dynamic component typing issue, setBlockData handles all block types
+      onChange={handleBlockChange}  // ← Change this line
+    />
+  );
+};
 
   return (
     <div className="space-y-6">

@@ -1,6 +1,16 @@
-import { NextAuthOptions } from "next-auth";
+import { NextAuthOptions} from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { randomUUID } from "crypto";
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id?: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    };
+  }
+}
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -32,7 +42,9 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async session({ session, token }) {
-      session.user.id = token.sub;
+      if (session.user) {
+        session.user.id = token.sub;
+      }
       return session;
     },
     async jwt({ token, user }) {

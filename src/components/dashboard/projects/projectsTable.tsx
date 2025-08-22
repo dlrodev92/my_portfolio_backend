@@ -28,37 +28,6 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { ProjectWithRelations } from "@/lib/types/projects";
 
-interface Technology {
-  id: number;
-  name: string;
-  reason: string;
-}
-
-interface Tag {
-  id: number;
-  name: string;
-  slug: string;
-}
-
-interface ProjectTag {
-  tag: Tag;
-}
-
-interface Project {
-  id: number;
-  title: string;
-  subtitle: string;
-  slug: string;
-  status: 'LIVE' | 'IN_PROGRESS' | 'ARCHIVED';
-  createdAt: string;
-  heroImage: string;
-  liveDemo?: string;
-  github?: string;
-  technologies: Technology[];
-  projectTags: ProjectTag[];
-}
-
-
 interface ProjectsTableProps {
   projects: ProjectWithRelations[];
 }

@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
-import { Search, Filter, X, ChevronDown, FolderOpen, Tag, BookOpen } from "lucide-react";
+import { Search, X, ChevronDown, FolderOpen, Tag, BookOpen } from "lucide-react";
 import { 
   AvailableCategory, 
   AvailableTag, 

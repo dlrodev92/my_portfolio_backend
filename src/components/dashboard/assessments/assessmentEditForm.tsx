@@ -33,18 +33,15 @@ interface AssessmentEditFormProps {
   slug: string;
 }
 
-interface AssessmentApiResponse extends AssessmentWithRelations {
-}
-
 export default function AssessmentEditForm({ slug }: AssessmentEditFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [originalData, setOriginalData] = useState<AssessmentApiResponse | null>(null);
+  const [originalData, setOriginalData] = useState<AssessmentWithRelations | null>(null);
   const [currentSlug, setCurrentSlug] = useState(slug);
   const router = useRouter();
 
-  const form = useForm<AssessmentFormData, any, AssessmentFormData>({
+  const form = useForm<AssessmentFormData, unknown, AssessmentFormData>({
     resolver: zodResolver(assessmentFormSchema),
     defaultValues: {
       contentBlocks: [],
@@ -73,39 +70,57 @@ export default function AssessmentEditForm({ slug }: AssessmentEditFormProps) {
           throw new Error('Failed to fetch assessment');
         }
 
-        const assessmentData: AssessmentApiResponse = await response.json();
+        const assessmentData: AssessmentWithRelations = await response.json();
         setOriginalData(assessmentData);
         
         // Transform API data to form data format using proper types
-        const formData: Partial<AssessmentFormData> = {
+        const formData: AssessmentFormData = {
           title: assessmentData.title || '',
           description: assessmentData.description || '',
           publishedAt: assessmentData.publishedAt ? 
             new Date(assessmentData.publishedAt).toISOString().slice(0, 16) : '',
           
-          // Content blocks with proper typing
-          contentBlocks: assessmentData.contentBlocks?.map((block) => ({
-            id: String(block.id),
-            type: block.type,
-            order: block.order,
-            content: block.content,
-            level: block.level || undefined,
-          })) || [],
+          // Content blocks with proper typing, always an array
+          contentBlocks: Array.isArray(assessmentData.contentBlocks)
+            ? assessmentData.contentBlocks.map((block) => ({
+                id: String(block.id),
+                type: block.type,
+                order: block.order,
+                content: block.content,
+                level: block.level ?? undefined,
+              }))
+            : [],
           
-          // Technologies with proper typing
-          technologies: assessmentData.technologies?.map((tech) => ({
-            name: tech.name,
-            reason: tech.reason || ''
-          })) || [],
+          // Technologies with proper typing, always an array
+          technologies: Array.isArray(assessmentData.technologies)
+            ? assessmentData.technologies.map((tech) => ({
+                name: tech.name,
+                reason: tech.reason || ''
+              }))
+            : [],
           
-          // Tags with proper typing
-          tags: assessmentData.assessmentTags?.map((tag: { tag: { name: string } }) => tag.tag.name) || [],
+          // Tags with proper typing, always an array
+          tags: Array.isArray(assessmentData.assessmentTags)
+            ? assessmentData.assessmentTags.map((tag: { tag: { name: string } }) => tag.tag.name)
+            : [],
           
-          // Initialize metadata arrays for existing images and files
-          imageDescriptions: assessmentData.images?.map((img) => img.caption || '') || [],
-          imageAlts: assessmentData.images?.map((img) => img.alt || '') || [],
-          imageCaptions: assessmentData.images?.map((img) => img.caption || '') || [],
-          fileNames: assessmentData.files?.map((file) => file.name) || [],
+          // Initialize metadata arrays for existing images and files, always arrays
+          imageDescriptions: Array.isArray(assessmentData.images)
+            ? assessmentData.images.map((img) => img.caption || '')
+            : [],
+          imageAlts: Array.isArray(assessmentData.images)
+            ? assessmentData.images.map((img) => img.alt || '')
+            : [],
+          imageCaptions: Array.isArray(assessmentData.images)
+            ? assessmentData.images.map((img) => img.caption || '')
+            : [],
+          fileNames: Array.isArray(assessmentData.files)
+            ? assessmentData.files.map((file) => file.name)
+            : [],
+          // Add missing fields if required by AssessmentFormData
+          mainImage: undefined,
+          images: [],
+          files: [],
         };
 
         // Reset form with fetched data
@@ -337,7 +352,7 @@ export default function AssessmentEditForm({ slug }: AssessmentEditFormProps) {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Delete Assessment</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to delete "<strong>{originalData?.title}</strong>"? 
+                    Are you sure you want to delete -<strong>{originalData?.title}</strong>- ? 
                     This action cannot be undone and will permanently remove all associated 
                     content, images, files, and data.
                   </AlertDialogDescription>

@@ -6,8 +6,6 @@ export const contentBlockSchema = z.object({
   type: z.enum(['PARAGRAPH', 'HEADING', 'CODE', 'IMAGE', 'CALLOUT', 'QUOTE', 'LIST', 'VIDEO']),
   order: z.number(),
   content: z.string(),
-  
-  // Optional fields based on block type
   level: z.number().min(1).max(6).optional(),
   language: z.string().optional(),
   codeTitle: z.string().optional(),
@@ -34,7 +32,7 @@ export const blogFormSchema = z.object({
   categoryId: z.string().optional(),
   seriesId: z.string().optional(),
   seriesPart: z.number().optional(),
-  heroImage: z.any().optional(),
+  heroImage: z.union([z.string(), z.instanceof(File)]).optional(),
   heroImageAlt: z.string().optional(),
   heroImageCaption: z.string().optional(),
 
@@ -51,7 +49,7 @@ export const blogFormSchema = z.object({
 
   // Step 3: SEO & Media
   metaDescription: z.string().min(1, 'Meta description is required').max(160, 'Too long'),
-  socialImage: z.any().optional(),
+  socialImage:  z.string().url('Must be a valid URL').optional(),
   tags: z.array(z.string()).default([]),
   slug: z.string().optional(),
 

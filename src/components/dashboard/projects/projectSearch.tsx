@@ -38,7 +38,6 @@ const typeOptions = [
 
 export default function ProjectsSearch({ 
   availableTechnologies, 
-  availableTypes,
   onFiltersChange 
 }: ProjectsSearchProps) {
   const [searchTerm, setSearchTerm] = useState("");

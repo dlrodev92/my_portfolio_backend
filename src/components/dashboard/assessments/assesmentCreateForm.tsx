@@ -24,9 +24,13 @@ export default function AssessmentCreateForm() {
   const form = useForm<AssessmentFormData>({
     resolver: zodResolver(assessmentFormSchema),
     defaultValues: {
+      title: '',
+      description: '',
       contentBlocks: [],
       technologies: [],
       tags: [],
+      images: [],
+      files: [],
       imageDescriptions: [],
       imageAlts: [],
       imageCaptions: [],
@@ -35,7 +39,6 @@ export default function AssessmentCreateForm() {
   });
 
   const onSubmit = async (data: AssessmentFormData) => {
-    
     setIsSubmitting(true);
 
     try {

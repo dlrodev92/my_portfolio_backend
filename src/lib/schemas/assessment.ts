@@ -11,31 +11,29 @@ export const assessmentContentBlockSchema = z.object({
 export const assessmentFormSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title too long'),
   description: z.string().min(1, 'Description is required'),
-  publishedAt: z.string().datetime().optional(), // ✅ proper date
+  publishedAt: z.string().datetime().optional(),
 
   mainImage: z.union([z.string(), z.instanceof(File)]).optional(),
-  images: z.array(z.union([z.string(), z.instanceof(File)])).default([]),
-  files: z.array(z.union([z.string(), z.instanceof(File)])).default([]),
+  images: z.array(z.union([z.string(), z.instanceof(File)])),
+  files: z.array(z.union([z.string(), z.instanceof(File)])),
 
-  contentBlocks: z.array(assessmentContentBlockSchema).default([]),
+  contentBlocks: z.array(assessmentContentBlockSchema),
 
   technologies: z.array(z.object({
     name: z.string().min(1, 'Technology name is required'),
     reason: z.string().optional()
-  })).default([]),
+  })),
 
-  tags: z.array(z.string()).default([]),
+  tags: z.array(z.string()),
 
-  imageDescriptions: z.array(z.string()).default([]),
-  imageAlts: z.array(z.string()).default([]),
-  imageCaptions: z.array(z.string()).default([]),
-  fileNames: z.array(z.string()).default([]),
+  imageDescriptions: z.array(z.string()),
+  imageAlts: z.array(z.string()),
+  imageCaptions: z.array(z.string()),
+  fileNames: z.array(z.string()),
 });
 
 export type AssessmentFormData = z.infer<typeof assessmentFormSchema>;
 export type AssessmentContentBlockData = z.infer<typeof assessmentContentBlockSchema>;
-
-
 
 export const createAssessmentContentBlock = (
   type: AssessmentContentBlockData['type'],

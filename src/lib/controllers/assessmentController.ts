@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma/client';
-import { Prisma } from '@prisma/client';
+import { Prisma, PrismaClientKnownRequestError } from '@prisma/client';
 import { FileUpload } from '@/lib/utils/s3Upload';
 import {
   handleAssessmentFileUploads,
@@ -224,13 +224,16 @@ export const createAssessment = async (req: NextRequest): Promise<NextResponse> 
   } catch (error) {
     console.error('Create assessment error:', error);
     
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2002') {
-        return NextResponse.json(
-          { error: 'An assessment with this title already exists' },
-          { status: 409 }
-        );
-      }
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      (error as PrismaClientKnownRequestError).code === 'P2002'
+    ) {
+      return NextResponse.json(
+        { error: 'An assessment with this title already exists' },
+        { status: 409 }
+      );
     }
     
     return NextResponse.json(
@@ -436,13 +439,16 @@ export const updateAssessmentBySlug = async (req: NextRequest, slug: string): Pr
   } catch (error) {
     console.error('Update assessment error:', error);
     
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2002') {
-        return NextResponse.json(
-          { error: 'An assessment with this title already exists' },
-          { status: 409 }
-        );
-      }
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      (error as PrismaClientKnownRequestError).code === 'P2002'
+    ) {
+      return NextResponse.json(
+        { error: 'An assessment with this title already exists' },
+        { status: 409 }
+      );
     }
     
     return NextResponse.json(

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma/client';
-import { Prisma, ContentBlockType, CalloutVariant, ListStyle, VideoType } from '@prisma/client';
+import { Prisma, CalloutVariant, ListStyle, VideoType } from '@prisma/client';
 import { ContentBlockData } from '@/lib/schemas/blog';
 import { uploadFileToS3 } from '@/lib/utils/s3Upload';
 
@@ -216,7 +216,8 @@ export const createBlogPost = async (req: NextRequest): Promise<NextResponse> =>
 
           return {
             blogPostId: newBlogPost.id,
-            type: block.type as ContentBlockType,
+            //eslint-disable-next-line @typescript-eslint/no-explicit-any
+            type: block.type as any,
             order: block.order ?? index,
             content: block.content,
             level: block.level ?? undefined,

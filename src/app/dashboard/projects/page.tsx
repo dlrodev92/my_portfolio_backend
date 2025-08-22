@@ -1,10 +1,11 @@
 import { prisma } from '@/lib/prisma/client';
 import ProjectsHeader from '@/components/dashboard/projects/projectsHeader';
 import ProjectsContainer from '@/components/dashboard/projects/projectsContainer';
+import { ProjectWithRelations } from '@/lib/types/projects';
 
 async function getProjectsData() {
   try {
-    const projects = await prisma.project.findMany({
+    const rawProjects = await prisma.project.findMany({
       include: {
         technologies: {
           select: {
@@ -29,6 +30,14 @@ async function getProjectsData() {
         createdAt: 'desc'
       }
     });
+
+    const projects: ProjectWithRelations[] = rawProjects.map(project => ({
+      ...project,
+      technologies: project.technologies.map(tech => ({
+        ...tech,
+        reason: tech.reason ?? '',
+      })),
+    }));
 
     const stats = {
       total: projects.length,
@@ -90,7 +99,7 @@ export default async function ProjectsPage() {
       <ProjectsHeader stats={stats} />
       
       <ProjectsContainer 
-        projects={projects} 
+        projects={projects}
         availableTechnologies={availableTechnologies}
         availableTypes={availableTypes}
       />

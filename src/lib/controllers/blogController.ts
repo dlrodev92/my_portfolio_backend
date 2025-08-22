@@ -210,7 +210,8 @@ export const createBlogPost = async (req: NextRequest): Promise<NextResponse> =>
 
       // Create content blocks with proper typing
       if (blogData.contentBlocks.length > 0) {
-        const contentBlocksData: Prisma.ContentBlockCreateManyInput[] = blogData.contentBlocks.map((block, index) => {
+        //eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const contentBlocksData: any = blogData.contentBlocks.map((block, index) => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const getJsonValue = (value: unknown): any | undefined => {
             if (value === null || value === undefined) {

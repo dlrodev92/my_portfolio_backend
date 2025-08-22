@@ -4,7 +4,6 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { prisma } from '@/lib/prisma/client';
 
-
 async function getBlogData() {
   try {
     const [categories, series] = await Promise.all([
@@ -23,14 +22,15 @@ async function getBlogData() {
   }
 }
 
+// Update the interface to reflect that params is a Promise
 interface BlogDetailPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
-
+  // Await the params Promise
   const { slug } = await params;
   const { categories, series } = await getBlogData();
 
@@ -51,7 +51,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
         </div>
       </div>
 
-      <BlogEditForm 
+      <BlogEditForm
         slug={slug}
         categories={categories}
         series={series}

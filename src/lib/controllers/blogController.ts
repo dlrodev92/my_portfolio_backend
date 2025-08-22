@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma/client';
-import { Prisma, CalloutVariant, ListStyle, VideoType } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { ContentBlockData } from '@/lib/schemas/blog';
 import { uploadFileToS3 } from '@/lib/utils/s3Upload';
+
+type CalloutVariant = 'INFO' | 'WARNING' | 'TIP' | 'ERROR';
+type ListStyle = 'BULLET' | 'NUMBERED';
+type VideoType = 'YOUTUBE' | 'VIMEO';
 
 interface CreateBlogData {
   title: string;

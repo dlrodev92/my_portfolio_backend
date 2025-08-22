@@ -46,7 +46,8 @@ export const getAssessments = async (request: NextRequest): Promise<NextResponse
     const tags = searchParams.get('tags')?.split(',').filter(Boolean) || [];
     const techs = searchParams.get('techs')?.split(',').filter(Boolean) || [];
 
-    const where: Prisma.AssessmentWhereInput = {
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: any = {
       AND: [
         search ? {
           OR: [

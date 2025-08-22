@@ -1,10 +1,11 @@
 import { prisma } from '@/lib/prisma/client';
 import BlogsHeader from '@/components/dashboard/blog/blogsHeader';
 import BlogsContainer from '@/components/dashboard/blog/blogsContainer';
+import { BlogPostWithRelations } from '@/lib/types/blogs';
 
 async function getBlogsData() {
   try {
-    const blogs = await prisma.blogPost.findMany({
+    const rawBlogs = await prisma.blogPost.findMany({
       include: {
         category: true,
         series: true,
@@ -21,6 +22,14 @@ async function getBlogsData() {
         createdAt: 'desc'
       }
     });
+
+    // Fix author type to match BlogPostWithRelations
+    const blogs: BlogPostWithRelations[] = rawBlogs.map(blog => ({
+      ...blog,
+      author: typeof blog.author === 'string'
+        ? JSON.parse(blog.author)
+        : blog.author
+    }));
 
     // Estadísticas calculadas desde los datos
     const now = new Date();

@@ -44,18 +44,18 @@ export const blogFormSchema = z.object({
     totalParts: z.number(),
   }).optional(),
 
-  // Step 2: Content
-  contentBlocks: z.array(contentBlockSchema).default([]),
+  // Step 2: Content - REMOVED .default([])
+  contentBlocks: z.array(contentBlockSchema),
 
   // Step 3: SEO & Media
   metaDescription: z.string().min(1, 'Meta description is required').max(160, 'Too long'),
-  socialImage:  z.string().url('Must be a valid URL').optional(),
-  tags: z.array(z.string()).default([]),
+  socialImage: z.string().url('Must be a valid URL').optional(),
+  tags: z.array(z.string()), // REMOVED .default([])
   slug: z.string().optional(),
 
-  // Step 4: Publishing
-  readTime: z.number().min(1, 'Read time is required').default(1),
-  wordCount: z.number().min(1, 'Word count is required').default(0),
+  // Step 4: Publishing - REMOVED .default() values
+  readTime: z.number().min(1, 'Read time is required'),
+  wordCount: z.number().min(1, 'Word count is required'),
   publishedAt: z.string().optional(),
   
   // Author info
@@ -75,6 +75,7 @@ export const blogFormSchema = z.object({
 export type BlogFormData = z.infer<typeof blogFormSchema>;
 export type ContentBlockData = z.infer<typeof contentBlockSchema>;
 
+// Rest of your schemas stay the same...
 // Validation schemas específicos por tipo de bloque
 export const headingBlockSchema = contentBlockSchema.extend({
   type: z.literal('HEADING'),

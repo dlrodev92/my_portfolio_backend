@@ -49,7 +49,7 @@ export const blogFormSchema = z.object({
 
   // Step 3: SEO & Media
   metaDescription: z.string().min(1, 'Meta description is required').max(160, 'Too long'),
-  socialImage: z.string().url('Must be a valid URL').optional(),
+  socialImage: z.union([z.string(), z.instanceof(File)]).optional(),
   tags: z.array(z.string()), // REMOVED .default([])
   slug: z.string().optional(),
 

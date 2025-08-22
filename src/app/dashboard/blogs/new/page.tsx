@@ -3,21 +3,23 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { prisma } from '@/lib/prisma/client';
-import { Series } from '@prisma/client';
 
 async function getBlogData() {
   try {
-    const [categories, series] = await Promise.all([
+    const [categories, seriesRaw] = await Promise.all([
       prisma.category.findMany({
         orderBy: { name: 'asc' }
       }),
       prisma.series.findMany({
         orderBy: { name: 'asc' }
-      }).then((series: Series[]) => series.map(s => ({
-        ...s,
-        description: s.description ?? undefined
-      })))
+      })
     ]);
+
+    // Map after the Promise.all to avoid typing issues
+    const series = seriesRaw.map(s => ({
+      ...s,
+      description: s.description ?? undefined
+    }));
 
     return { categories, series };
   } catch (error) {

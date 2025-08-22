@@ -17,6 +17,28 @@ interface AssessmentUploadedFiles {
   files?: FileUpload[];
 }
 
+interface AssessmentContentBlock {
+  type: 'PARAGRAPH' | 'HEADING';
+  content: string;
+  order: number;
+  level?: number;
+}
+
+interface AssessmentTechnology {
+  name: string;
+  reason?: string;
+}
+
+interface AssessmentFileUploadResult {
+  mainImage?: string;
+  images?: string[];
+  files?: Array<{
+    url: string;
+    name: string;
+    size: number;
+    mimeType: string;
+  }>;
+}
 export const getAssessments = async (request: NextRequest): Promise<NextResponse> => {
   try {
     const { searchParams } = new URL(request.url);
@@ -84,13 +106,15 @@ export const getAssessments = async (request: NextRequest): Promise<NextResponse
 export const createAssessment = async (req: NextRequest): Promise<NextResponse> => {
   try {
     const formData = await req.formData();
-    const getText = (key: string) => formData.get(key)?.toString() ?? '';
-    const getJson = (key: string) => {
+    
+    const getText = (key: string): string => formData.get(key)?.toString() ?? '';
+    
+    const getJson = <T>(key: string): T => {
       const value = formData.get(key)?.toString();
       try {
-        return value ? JSON.parse(value) : null;
+        return value ? JSON.parse(value) as T : [] as T;
       } catch {
-        return null;
+        return [] as T;
       }
     };
 
@@ -98,21 +122,20 @@ export const createAssessment = async (req: NextRequest): Promise<NextResponse> 
     const description = getText('description');
     const publishedAt = getText('publishedAt');
     
-    const contentBlocks = getJson('contentBlocks') || [];
-    const technologies = getJson('technologies') || [];
-    const tags = getJson('tags') || [];
-    const imageDescriptions = getJson('imageDescriptions') || [];
-    const imageAlts = getJson('imageAlts') || [];
-    const imageCaptions = getJson('imageCaptions') || [];
-    const fileNames = getJson('fileNames') || [];
+    const contentBlocks = getJson<AssessmentContentBlock[]>('contentBlocks');
+    const technologies = getJson<AssessmentTechnology[]>('technologies');
+    const tags = getJson<string[]>('tags');
+    const imageDescriptions = getJson<string[]>('imageDescriptions');
+    const imageAlts = getJson<string[]>('imageAlts');
+    const imageCaptions = getJson<string[]>('imageCaptions');
+    const fileNames = getJson<string[]>('fileNames');
 
-    const mainImage = formData.get('mainImage') as File;
+    const mainImage = formData.get('mainImage') as File | null;
     const images = formData.getAll('images') as File[];
     const files = formData.getAll('files') as File[];
 
     const uploadFiles: AssessmentUploadedFiles = {};
 
-    
     if (mainImage && mainImage.size > 0) {
       uploadFiles.mainImage = [{
         buffer: Buffer.from(await mainImage.arrayBuffer()),
@@ -122,7 +145,7 @@ export const createAssessment = async (req: NextRequest): Promise<NextResponse> 
       }];
     }
 
-    if (images.length && images[0].size > 0) {
+    if (images.length > 0 && images[0] && images[0].size > 0) {
       uploadFiles.images = [];
       for (const file of images) {
         uploadFiles.images.push({
@@ -134,8 +157,7 @@ export const createAssessment = async (req: NextRequest): Promise<NextResponse> 
       }
     }
 
-    if (files.length && files[0].size > 0) {
-       
+    if (files.length > 0 && files[0] && files[0].size > 0) {
       uploadFiles.files = [];
       for (const file of files) {
         uploadFiles.files.push({
@@ -152,12 +174,11 @@ export const createAssessment = async (req: NextRequest): Promise<NextResponse> 
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/(^-|-$)/g, '');
 
-    // Handle file uploads
-    const uploadedFiles = await handleAssessmentFileUploads(uploadFiles, fileNames);
-  
+   // Handle file uploads
+    const uploadedFiles: AssessmentFileUploadResult = await handleAssessmentFileUploads(uploadFiles, fileNames);
 
     // Start transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Create main assessment
       const createdAssessment = await tx.assessment.create({
         data: {
@@ -178,12 +199,12 @@ export const createAssessment = async (req: NextRequest): Promise<NextResponse> 
       await createAssessmentTechnologies(tx, assessmentId, technologies);
 
       // Create images
-      if (uploadedFiles.images) {
+      if (uploadedFiles.images && uploadedFiles.images.length > 0) {
         await createAssessmentImages(tx, assessmentId, uploadedFiles.images, imageDescriptions, imageAlts, imageCaptions);
       }
 
       // Create files
-      if (uploadedFiles.files) {
+      if (uploadedFiles.files && uploadedFiles.files.length > 0) {
         await createAssessmentFiles(tx, assessmentId, uploadedFiles.files);
       }
 
@@ -271,13 +292,15 @@ export const updateAssessmentBySlug = async (req: NextRequest, slug: string): Pr
     }
 
     const formData = await req.formData();
-    const getText = (key: string) => formData.get(key)?.toString() ?? '';
-    const getJson = (key: string) => {
+    
+    const getText = (key: string): string => formData.get(key)?.toString() ?? '';
+    
+    const getJson = <T>(key: string): T => {
       const value = formData.get(key)?.toString();
       try {
-        return value ? JSON.parse(value) : null;
+        return value ? JSON.parse(value) as T : [] as T;
       } catch {
-        return null;
+        return [] as T;
       }
     };
 
@@ -285,15 +308,15 @@ export const updateAssessmentBySlug = async (req: NextRequest, slug: string): Pr
     const description = getText('description');
     const publishedAt = getText('publishedAt');
     
-    const contentBlocks = getJson('contentBlocks') || [];
-    const technologies = getJson('technologies') || [];
-    const tags = getJson('tags') || [];
-    const imageDescriptions = getJson('imageDescriptions') || [];
-    const imageAlts = getJson('imageAlts') || [];
-    const imageCaptions = getJson('imageCaptions') || [];
-    const fileNames = getJson('fileNames') || [];
+    const contentBlocks = getJson<AssessmentContentBlock[]>('contentBlocks');
+    const technologies = getJson<AssessmentTechnology[]>('technologies');
+    const tags = getJson<string[]>('tags');
+    const imageDescriptions = getJson<string[]>('imageDescriptions');
+    const imageAlts = getJson<string[]>('imageAlts');
+    const imageCaptions = getJson<string[]>('imageCaptions');
+    const fileNames = getJson<string[]>('fileNames');
 
-    const mainImage = formData.get('mainImage') as File;
+    const mainImage = formData.get('mainImage') as File | null;
     const images = formData.getAll('images') as File[];
     const files = formData.getAll('files') as File[];
 
@@ -308,7 +331,7 @@ export const updateAssessmentBySlug = async (req: NextRequest, slug: string): Pr
       }];
     }
 
-    if (images.length && images[0].size > 0) {
+    if (images.length > 0 && images[0] && images[0].size > 0) {
       uploadFiles.images = [];
       for (const file of images) {
         uploadFiles.images.push({
@@ -320,7 +343,7 @@ export const updateAssessmentBySlug = async (req: NextRequest, slug: string): Pr
       }
     }
 
-    if (files.length && files[0].size > 0) {
+    if (files.length > 0 && files[0] && files[0].size > 0) {
       uploadFiles.files = [];
       for (const file of files) {
         uploadFiles.files.push({
@@ -349,10 +372,10 @@ export const updateAssessmentBySlug = async (req: NextRequest, slug: string): Pr
     }
 
     // Handle file uploads
-    const uploadedFiles = await handleAssessmentFileUploads(uploadFiles, fileNames);
+    const uploadedFiles: AssessmentFileUploadResult = await handleAssessmentFileUploads(uploadFiles, fileNames);
 
     // Start transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       // Update main assessment
       const updatedAssessment = await tx.assessment.update({
         where: { slug },
@@ -373,10 +396,10 @@ export const updateAssessmentBySlug = async (req: NextRequest, slug: string): Pr
       await tx.assessmentTag.deleteMany({ where: { assessmentId } });
       
       // Only delete images/files if new ones are provided
-      if (uploadedFiles.images) {
+      if (uploadedFiles.images && uploadedFiles.images.length > 0) {
         await tx.assessmentImage.deleteMany({ where: { assessmentId } });
       }
-      if (uploadedFiles.files) {
+      if (uploadedFiles.files && uploadedFiles.files.length > 0) {
         await tx.assessmentFile.deleteMany({ where: { assessmentId } });
       }
 
@@ -387,12 +410,12 @@ export const updateAssessmentBySlug = async (req: NextRequest, slug: string): Pr
       await createAssessmentTechnologies(tx, assessmentId, technologies);
 
       // Recreate images if provided
-      if (uploadedFiles.images) {
+      if (uploadedFiles.images && uploadedFiles.images.length > 0) {
         await createAssessmentImages(tx, assessmentId, uploadedFiles.images, imageDescriptions, imageAlts, imageCaptions);
       }
 
       // Recreate files if provided
-      if (uploadedFiles.files) {
+      if (uploadedFiles.files && uploadedFiles.files.length > 0) {
         await createAssessmentFiles(tx, assessmentId, uploadedFiles.files);
       }
 
@@ -406,7 +429,7 @@ export const updateAssessmentBySlug = async (req: NextRequest, slug: string): Pr
       success: true,
       message: 'Assessment updated successfully',
       assessment: result,
-      newSlug: newSlug,
+      newSlug,
     });
 
   } catch (error) {

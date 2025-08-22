@@ -1,4 +1,4 @@
-import { prisma } from '@/lib/prisma/client';
+import { Prisma } from '@prisma/client';
 import { uploadFileToS3, uploadMultipleFilesToS3, FileUpload } from '@/lib/utils/s3Upload';
 
 interface UploadedAssessmentFiles {
@@ -27,14 +27,12 @@ export const handleAssessmentFileUploads = async (files: {
     // Upload multiple images
     if (files.images && files.images.length > 0) {
       const imageResults = await uploadMultipleFilesToS3(files.images, 'assessments');
-      result.images = imageResults.map(result => result.url!).filter(Boolean);
+      result.images = imageResults.map(uploadResult => uploadResult.url!).filter(Boolean);
     }
 
     // Upload files
     if (files.files && files.files.length > 0) {
-      
       const fileResults = await uploadMultipleFilesToS3(files.files, 'assessments');
-      
       
       result.files = fileResults.map((uploadResult, index) => ({
         url: uploadResult.url!,
@@ -42,8 +40,6 @@ export const handleAssessmentFileUploads = async (files: {
         size: files.files![index].size,
         mimeType: files.files![index].mimetype,
       })).filter(file => file.url);
-
-      
     }
 
     return result;
@@ -53,9 +49,8 @@ export const handleAssessmentFileUploads = async (files: {
   }
 };
 
-// Función para crear tecnologías reutilizando la lógica de projects
 export const createAssessmentTechnologies = async (
-  tx: typeof prisma, 
+  tx: Prisma.TransactionClient,
   assessmentId: number, 
   technologies: Array<{ name: string; reason?: string }>
 ): Promise<void> => {
@@ -75,7 +70,7 @@ export const createAssessmentTechnologies = async (
 };
 
 export const createAssessmentTags = async (
-  tx: typeof prisma, 
+  tx: Prisma.TransactionClient,
   assessmentId: number, 
   tags: string[]
 ): Promise<void> => {
@@ -104,7 +99,7 @@ export const createAssessmentTags = async (
 };
 
 export const createAssessmentContentBlocks = async (
-  tx: typeof prisma, 
+  tx: Prisma.TransactionClient,
   assessmentId: number, 
   contentBlocks: Array<{
     type: 'PARAGRAPH' | 'HEADING';
@@ -129,7 +124,7 @@ export const createAssessmentContentBlocks = async (
 };
 
 export const createAssessmentImages = async (
-  tx: typeof prisma, 
+  tx: Prisma.TransactionClient,
   assessmentId: number, 
   images: string[], 
   descriptions: string[] = [], 
@@ -152,11 +147,10 @@ export const createAssessmentImages = async (
 };
 
 export const createAssessmentFiles = async (
-  tx: typeof prisma, 
+  tx: Prisma.TransactionClient,
   assessmentId: number, 
   files: Array<{ url: string; name: string; size: number; mimeType: string }>
 ): Promise<void> => {
-    
   if (files && files.length > 0) {
     const filesToCreate = files.map((file, index) => ({
       assessmentId,

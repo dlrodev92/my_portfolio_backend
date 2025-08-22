@@ -564,7 +564,8 @@ export const updateBlogPostBySlug = async (req: NextRequest, slug: string): Prom
     }
 
     // Start transaction
-    const result = await prisma.$transaction(async (tx) => {
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = await prisma.$transaction(async (tx:any) => {
       // Update main blog post data
       const updatedBlogPost = await tx.blogPost.update({
         where: { slug },

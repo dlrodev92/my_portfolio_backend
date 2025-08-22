@@ -316,7 +316,7 @@ export const updateProject = async (id: string, req: NextRequest): Promise<NextR
 
       if (files.screenshots!.length > 0) {
         const uploadResult = await handleProjectFileUploads(files, []);
-        screenshotUrls = uploadResult.screenshotUrls;
+          screenshotUrls = uploadResult.screenshotUrls;
       }
     }
 

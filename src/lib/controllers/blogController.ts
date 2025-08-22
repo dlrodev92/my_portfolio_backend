@@ -696,3 +696,89 @@ export const deleteBlogPostBySlug = async (slug: string): Promise<NextResponse> 
     );
   }
 };
+
+
+export const getBlogPostsForCards = async (req: NextRequest): Promise<NextResponse> => {
+  try {
+    const { searchParams } = new URL(req.url);
+    
+    const limit = searchParams.get('limit');
+    const category = searchParams.get('category');
+    const tag = searchParams.get('tag');
+   
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any 
+    const whereClause: any = {};
+    
+    // Only published posts for cards
+    whereClause.publishedAt = {
+      not: null
+    };
+    
+    if (category) {
+      whereClause.category = {
+        slug: category
+      };
+    }
+    
+    if (tag) {
+      whereClause.blogPostTags = {
+        some: {
+          blogTag: {
+            slug: tag
+          }
+        }
+      };
+    }
+
+    const blogPosts = await prisma.blogPost.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        title: true,
+        subtitle: true,
+        slug: true,
+        excerpt: true,
+        heroImage: true,
+        readTime: true,
+        views: true,
+        publishedAt: true,
+        createdAt: true,
+        author: true,
+        category: {
+          select: {
+            name: true,
+            slug: true,
+          }
+        },
+        blogPostTags: {
+          select: {
+            blogTag: {
+              select: {
+                name: true,
+                slug: true,
+              }
+            }
+          },
+          take: 3 // Limit tags for cards
+        }
+      },
+      orderBy: [
+        { publishedAt: 'desc' },
+        { createdAt: 'desc' }
+      ],
+      take: limit ? parseInt(limit) : undefined,
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      data: blogPosts,
+      count: blogPosts.length 
+    }, { status: 200 });
+
+  } catch (error) {
+    console.error('Get blog posts for cards error:', error);
+    return NextResponse.json({
+      error: error instanceof Error ? error.message : 'Failed to fetch blog posts for cards',
+    }, { status: 500 });
+  }
+};

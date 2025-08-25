@@ -660,13 +660,11 @@ export const updateBlogPostBySlug = async (req: NextRequest, slug: string): Prom
     console.error('Update blog post error:', error);
     
     // Handle unique constraint errors
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2002') {
-        return NextResponse.json(
-          { error: 'A blog post with this title already exists' },
-          { status: 409 }
-        );
-      }
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'A blog post with this title already exists' },
+        { status: 409 }
+      );
     }
     
     return NextResponse.json(

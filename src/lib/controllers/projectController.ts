@@ -186,10 +186,12 @@ export const getProjects = async (req: NextRequest): Promise<NextResponse> => {
       }
     });
 
-    let filteredProjects = projects;
+   let filteredProjects = projects;
     if (technology) {
-      filteredProjects = projects.filter(project => 
-        project.technologies.some(tech => 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      filteredProjects = projects.filter((project: any) => 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        project.technologies.some((tech: any) => 
           tech.name.toLowerCase().includes(technology.toLowerCase())
         )
       );

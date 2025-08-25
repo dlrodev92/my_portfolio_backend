@@ -581,7 +581,7 @@ export const updateBlogPostBySlug = async (req: NextRequest, slug: string): Prom
           heroImageCaption,
           readTime,
           wordCount,
-          author: author || Prisma.JsonNull,
+          author: author || null,
           categoryId,
           seriesId,
           seriesPart,

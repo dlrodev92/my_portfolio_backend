@@ -1,4 +1,5 @@
 import type {  Category, Series, ContentBlock, BlogTag, BlogPostTag } from '@prisma/client';
+import type formidable from "formidable";
 
 // Interfaz para filtros de búsqueda de blogs
 export interface BlogSearchFilters {
@@ -126,8 +127,10 @@ export interface FileUpload {
   size: number;
 }
 
+
+
 export interface UploadedFiles {
-  heroImage?: FileUpload[];
-  socialImage?: FileUpload[];
-  contentImages?: FileUpload[];
+  heroImage?: formidable.File[];
+  socialImage?: formidable.File[];
+  contentImages?: formidable.File[];
 }

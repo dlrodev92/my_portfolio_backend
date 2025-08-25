@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { uploadFileToS3, uploadMultipleFilesToS3 } from './s3Upload';
-import { UploadedFiles, ContentBlockInput, SeriesData, TagData, CategoryData } from '@/lib/types/blogs';
+import { ContentBlockInput, SeriesData, TagData, CategoryData, UploadedFiles  } from '@/lib/types/blogs';
 
 export const handleBlogFileUploads = async (
   files: UploadedFiles,
@@ -64,7 +64,7 @@ export const processContentBlocks = async (
       calloutTitle: block.calloutTitle,
       quoteAuthor: block.quoteAuthor,
       listStyle: block.listStyle,
-      listItems: block.listItems ?? null,
+      listItems: block.listItems !== undefined ? block.listItems : Prisma.JsonNull,
       videoType: block.videoType,
       videoId: block.videoId,
       videoTitle: block.videoTitle,

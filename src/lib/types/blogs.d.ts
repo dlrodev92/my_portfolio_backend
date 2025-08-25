@@ -72,7 +72,6 @@ export interface AvailableSeries {
   totalParts: number;
 }
 
-// Estadísticas de blogs
 export interface BlogStats {
   total: number;
   published: number;
@@ -80,4 +79,55 @@ export interface BlogStats {
   thisMonth: number;
   totalViews: number;
   avgReadTime: number;
+}
+
+export interface ContentBlockInput {
+  type: 'PARAGRAPH' | 'HEADING' | 'CODE' | 'IMAGE' | 'CALLOUT' | 'QUOTE' | 'LIST' | 'VIDEO';
+  order?: number;
+  content?: string;
+  level?: number;
+  language?: string;
+  codeTitle?: string;
+  imageUrl?: string;
+  imageAlt?: string;
+  imageCaption?: string;
+  imageAlignment?: 'left' | 'center' | 'right';
+  calloutVariant?: 'INFO' | 'WARNING' | 'TIP' | 'ERROR';
+  calloutTitle?: string;
+  quoteAuthor?: string;
+  listStyle?: 'BULLET' | 'NUMBERED';
+  listItems?: string[];
+  videoType?: 'YOUTUBE' | 'VIMEO';
+  videoId?: string;
+  videoTitle?: string;
+  paragraphStyle?: string; 
+}
+
+export interface SeriesData {
+  name: string;
+  description?: string;
+  part?: number; 
+}
+
+
+export interface TagData {
+  name: string;
+}
+
+
+export interface CategoryData {
+  name: string;
+}
+
+export interface FileUpload {
+  buffer: Buffer;
+  originalname: string;
+  mimetype: string;
+  size: number;
+}
+
+export interface UploadedFiles {
+  heroImage?: FileUpload[];
+  socialImage?: FileUpload[];
+  contentImages?: FileUpload[];
 }

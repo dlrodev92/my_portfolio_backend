@@ -8,7 +8,8 @@ import {
   createTechnicalDetails,
   createProjectArrayData,
   createProjectScreenshots,
-  createProjectTags
+  createProjectTags,
+  ScreenshotUploadResult
 } from '@/lib/utils/projectHelpers';
 import { UploadedFiles } from '../types/projects';
 
@@ -21,7 +22,7 @@ export const createProject = async (req: NextRequest): Promise<NextResponse> => 
     const title = getText('title');
     const subtitle = getText('subtitle');
     const status = getText('status') as 'LIVE' | 'IN_PROGRESS' | 'ARCHIVED';
-    const type = getText('type') as 'PERSONAL' | 'FREELANCE' | 'DEVOPS'; // ⭐ Nuevo campo
+    const type = getText('type') as 'PERSONAL' | 'FREELANCE' | 'DEVOPS';
     const liveDemo = getText('liveDemo');
     const github = getText('github');
     const caseStudy = getText('caseStudy');
@@ -141,7 +142,7 @@ export const getProjects = async (req: NextRequest): Promise<NextResponse> => {
     const search = searchParams.get('search');
     const technology = searchParams.get('technology');
     
-    //eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const whereClause: any = {};
     
     if (status) {
@@ -275,7 +276,7 @@ export const updateProject = async (id: string, req: NextRequest): Promise<NextR
     const title = getText('title');
     const subtitle = getText('subtitle');
     const status = getText('status') as 'LIVE' | 'IN_PROGRESS' | 'ARCHIVED';
-    const type = getText('type') as 'PERSONAL' | 'FREELANCE' | 'DEVOPS'; // ⭐ Nuevo campo
+    const type = getText('type') as 'PERSONAL' | 'FREELANCE' | 'DEVOPS';
     const liveDemo = getText('liveDemo');
     const github = getText('github');
     const caseStudy = getText('caseStudy');
@@ -285,7 +286,7 @@ export const updateProject = async (id: string, req: NextRequest): Promise<NextR
     const screenshots = formData.getAll('screenshots') as File[];
 
     let heroImageUrl = existingProject.heroImage; 
-    let screenshotUrls: string[] = [];
+    let screenshotUrls: ScreenshotUploadResult[] = [];
 
     if (heroImage && heroImage.size > 0) {
       const files: UploadedFiles = {
@@ -510,6 +511,15 @@ export const updateProjectBySlug = async (req: NextRequest, slug: string): Promi
     const formData = await req.formData();
     const getText = (key: string) => formData.get(key)?.toString() ?? '';
 
+    // Add parsing logic
+    const parseJSON = <T>(key: string): T => {
+      try {
+        return JSON.parse(getText(key) || '[]') as T;
+      } catch {
+        return [] as T;
+      }
+    };
+
     const title = getText('title');
     const subtitle = getText('subtitle');
     const status = getText('status') as 'LIVE' | 'IN_PROGRESS' | 'ARCHIVED';
@@ -518,6 +528,16 @@ export const updateProjectBySlug = async (req: NextRequest, slug: string): Promi
     const github = getText('github');
     const caseStudy = getText('caseStudy');
     const publishedAt = getText('publishedAt');
+
+    // Parse array data
+    const technologies = parseJSON<string[]>('technologies');
+    const tags = parseJSON<string[]>('tags');
+    const lessons = parseJSON<string[]>('lessons');
+    const businessOutcomes = parseJSON<string[]>('businessOutcomes');
+    const improvements = parseJSON<string[]>('improvements');
+    const nextSteps = parseJSON<string[]>('nextSteps');
+    const futureTools = parseJSON<string[]>('futureTools');
+    const performanceMetrics = parseJSON<string[]>('performanceMetrics');
 
     const heroImage = formData.get('heroImage') as File;
     const screenshots = formData.getAll('screenshots') as File[];
@@ -568,7 +588,8 @@ export const updateProjectBySlug = async (req: NextRequest, slug: string): Promi
     const uploadedFiles = await handleProjectFileUploads(files, []);
 
     // Start transaction
-    const result = await prisma.$transaction(async (tx) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const result = await prisma.$transaction(async (tx: any) => {
       // Update main project data
       const updatedProject = await tx.project.update({
         where: { slug },
@@ -643,22 +664,21 @@ export const updateProjectBySlug = async (req: NextRequest, slug: string): Promi
         await tx.screenshot.deleteMany({ where: { projectId } });
       }
 
-     
-      await createProjectArrayData(tx, projectId, formData);
-      
+      // Create array data with parsed values
+      await createProjectArrayData(tx, projectId, {
+        technologies,
+        lessons,
+        businessOutcomes,
+        improvements,
+        nextSteps,
+        futureTools,
+        performanceMetrics
+      });
       
       if (uploadedFiles.screenshotUrls) {
         await createProjectScreenshots(tx, projectId, uploadedFiles.screenshotUrls);
       }
 
-     
-      const tags = (() => {
-        try {
-          return JSON.parse(formData.get('tags')?.toString() || '[]');
-        } catch {
-          return [];
-        }
-      })();
       await createProjectTags(tx, projectId, tags);
 
       return updatedProject;
@@ -674,14 +694,12 @@ export const updateProjectBySlug = async (req: NextRequest, slug: string): Promi
   } catch (error) {
     console.error('Update project error:', error);
     
-    // Handle unique constraint errors
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2002') {
-        return NextResponse.json(
-          { error: 'A project with this title already exists' },
-          { status: 409 }
-        );
-      }
+    // Check for unique constraint violation
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'A project with this title already exists' },
+        { status: 409 }
+      );
     }
     
     return NextResponse.json(
@@ -730,7 +748,7 @@ export const getProjectsForCards = async (req: NextRequest): Promise<NextRespons
     const limit = searchParams.get('limit');
     const featured = searchParams.get('featured'); // For featured projects only
     
-    //eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const whereClause: any = {};
     
     // Default to only LIVE projects for cards unless specified

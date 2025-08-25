@@ -8,14 +8,20 @@ export const assessmentContentBlockSchema = z.object({
   level: z.number().min(1).max(6).optional(),
 });
 
+// Safe file schema (no rompe en Node)
+const fileSchema = z.custom<File>(
+  (val) => typeof File !== "undefined" && val instanceof File,
+  { message: "Debe ser un archivo válido" }
+);
+
 export const assessmentFormSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title too long'),
   description: z.string().min(1, 'Description is required'),
   publishedAt: z.string().datetime().optional(),
 
-  mainImage: z.union([z.string(), z.instanceof(File)]).optional(),
-  images: z.array(z.union([z.string(), z.instanceof(File)])),
-  files: z.array(z.union([z.string(), z.instanceof(File)])),
+  mainImage: z.union([z.string(), fileSchema]).optional(),
+  images: z.array(z.union([z.string(), fileSchema])),
+  files: z.array(z.union([z.string(), fileSchema])),
 
   contentBlocks: z.array(assessmentContentBlockSchema),
 

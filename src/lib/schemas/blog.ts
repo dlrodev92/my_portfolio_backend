@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+const fileSchema = z.custom<File>(
+  (val) => typeof File !== "undefined" && val instanceof File,
+  { message: "Debe ser un archivo válido" }
+);
+
 // Content Block Schema detallado
 export const contentBlockSchema = z.object({
   id: z.string(),
@@ -32,7 +37,7 @@ export const blogFormSchema = z.object({
   categoryId: z.string().optional(),
   seriesId: z.string().optional(),
   seriesPart: z.number().optional(),
-  heroImage: z.union([z.string(), z.instanceof(File)]).optional(),
+  heroImage: z.union([z.string(), fileSchema]).optional(),
   heroImageAlt: z.string().optional(),
   heroImageCaption: z.string().optional(),
 
@@ -44,20 +49,20 @@ export const blogFormSchema = z.object({
     totalParts: z.number(),
   }).optional(),
 
-  // Step 2: Content - REMOVED .default([])
+  // Step 2: Content
   contentBlocks: z.array(contentBlockSchema),
 
   // Step 3: SEO & Media
   metaDescription: z.string().min(1, 'Meta description is required').max(160, 'Too long'),
-  socialImage: z.union([z.string(), z.instanceof(File)]).optional(),
-  tags: z.array(z.string()), // REMOVED .default([])
+  socialImage: z.union([z.string(), fileSchema]).optional(),
+  tags: z.array(z.string()),
   slug: z.string().optional(),
 
-  // Step 4: Publishing - REMOVED .default() values
+  // Step 4: Publishing
   readTime: z.number().min(1, 'Read time is required'),
   wordCount: z.number().min(1, 'Word count is required'),
   publishedAt: z.string().optional(),
-  
+
   // Author info
   author: z.object({
     name: z.string().min(1, 'Author name is required'),
@@ -71,6 +76,7 @@ export const blogFormSchema = z.object({
     }).optional(),
   }),
 });
+
 
 export type BlogFormData = z.infer<typeof blogFormSchema>;
 export type ContentBlockData = z.infer<typeof contentBlockSchema>;

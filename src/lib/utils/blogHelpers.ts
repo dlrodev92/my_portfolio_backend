@@ -1,6 +1,7 @@
 import { Prisma } from '@prisma/client';
 import { uploadFileToS3, uploadMultipleFilesToS3 } from './s3Upload';
-import { ContentBlockInput, SeriesData, TagData, CategoryData, UploadedFiles  } from '@/lib/types/blogs';
+import { fileToUploadFormat } from './fileUpload';
+import { ContentBlockInput, SeriesData, TagData, CategoryData, UploadedFiles } from '@/lib/types/blogs';
 
 export const handleBlogFileUploads = async (
   files: UploadedFiles,
@@ -14,20 +15,31 @@ export const handleBlogFileUploads = async (
   let socialImageUrl = '';
   let processedContentBlocks = [...contentBlocks];
 
+  // Hero image
   if (files.heroImage?.[0]) {
-    const heroResult = await uploadFileToS3(files.heroImage[0], 'blog');
+    const heroFile = await fileToUploadFormat(files.heroImage[0]);
+    const heroResult = await uploadFileToS3(heroFile, 'blog');
     if (!heroResult.success) throw new Error(`Hero image upload failed: ${heroResult.error}`);
     heroImageUrl = heroResult.url!;
   }
 
+  // Social image
   if (files.socialImage?.[0]) {
-    const socialResult = await uploadFileToS3(files.socialImage[0], 'blog');
+    const socialFile = await fileToUploadFormat(files.socialImage[0]);
+    const socialResult = await uploadFileToS3(socialFile, 'blog');
     if (!socialResult.success) throw new Error(`Social image upload failed: ${socialResult.error}`);
     socialImageUrl = socialResult.url!;
   }
 
+  // Content images
   if (files.contentImages?.length) {
-    const contentImageResults = await uploadMultipleFilesToS3(files.contentImages, 'blog');
+    // Convertimos todos los formidable.File a FileUpload
+    const formattedContentFiles = await Promise.all(
+      files.contentImages.map(f => fileToUploadFormat(f))
+    );
+
+    const contentImageResults = await uploadMultipleFilesToS3(formattedContentFiles, 'blog');
+
     let imageIndex = 0;
     processedContentBlocks = contentBlocks.map(block => {
       if (block.type === 'IMAGE' && imageIndex < contentImageResults.length) {
@@ -41,6 +53,7 @@ export const handleBlogFileUploads = async (
 
   return { heroImageUrl, socialImageUrl, processedContentBlocks };
 };
+
 
 export const processContentBlocks = async (
   tx: Prisma.TransactionClient,

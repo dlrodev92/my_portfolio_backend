@@ -64,7 +64,7 @@ export const processContentBlocks = async (
       calloutTitle: block.calloutTitle,
       quoteAuthor: block.quoteAuthor,
       listStyle: block.listStyle,
-      listItems: block.listItems !== undefined ? block.listItems : Prisma.JsonNull,
+      listItems: block.listItems !== undefined ? block.listItems : Prisma.DbNull,
       videoType: block.videoType,
       videoId: block.videoId,
       videoTitle: block.videoTitle,
